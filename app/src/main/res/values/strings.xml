@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Firebase Start</string>
+    <string name="last_name">Last Name</string>
 </resources>
