@@ -1,75 +1,63 @@
 package com.example.firebasestart;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.Toast;
+import android.view.View;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.example.firebasestart.adapters.UserAdapter;
 import com.example.firebasestart.databinding.ActivityMainBinding;
-import com.google.firebase.firestore.EventListener;
+import com.example.firebasestart.pojo.User;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private FirebaseFirestore db;
+    private List<User> users;
+    private UserAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        users = new ArrayList<>();
+        adapter = new UserAdapter();
+        binding.recyclerUsers.setLayoutManager(new GridLayoutManager(this,1));
+        binding.recyclerUsers.setAdapter(adapter);
         db = FirebaseFirestore.getInstance();
-//        Map<String, Object> user = new HashMap<>();
-//        user.put("first", "Jack");
-//        user.put("second", "Reacher");
-//        user.put("born", "1995");
-//        user.put("middle", "Mathison");
-//
-//        db.collection("users")
-//                .add(user)
-//                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-//                    @Override
-//                    public void onSuccess(DocumentReference documentReference) {
-//                        Log.d("TTT", "onSuccess: DocumentSnapshot added with ID: " + documentReference.getId());
-//                    }
-//                })
-//                .addOnFailureListener(new OnFailureListener() {
-//                    @Override
-//                    public void onFailure(@NonNull  Exception e) {
-//                        Log.w("TTT", "Error adding document", e);
-//                    }
-//                });
-//        db.collection("users")
-//                .get()
-//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-//                        if (task.isSuccessful()) {
-//                            for (QueryDocumentSnapshot snapshot : task.getResult()) {
-//                                Log.d("TTT", "onComplete:  " + snapshot.getData());
-//                            }
-//                        } else {
-//                            Log.w("TTT", "Error getting documents.", task.getException());
-//                        }
-//                    }
-//                });
-        db.collection("users").addSnapshotListener(new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(@Nullable QuerySnapshot value,
-                                @Nullable FirebaseFirestoreException error) {
-                if (value != null) {
-                    for (QueryDocumentSnapshot snapshot : value) {
-                        Log.d("TTT", "onComplete:  " + snapshot.getData());
+        db.collection("users").get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot snapshot : task.getResult()) {
+//                                User user = new User(snapshot.get("firstName").toString(), snapshot.get("lastName").toString(),
+//                                        snapshot.get("gender").toString(), snapshot.get("middleName").toString());
+//                                Log.d("TTT", "onComplete: " + snapshot.get("firstName").toString());
+                                User user = snapshot.toObject(User.class);
+                                users.add(user);
+                            }
+                            adapter.setUsers(users);
+                        }
                     }
-                } else {
-                    Toast.makeText(MainActivity.this, "" + error, Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+                });
+
+    }
+
+    public void goToAdd(View view) {
+        Intent intent = new Intent(this, AddData.class);
+        startActivity(intent);
     }
 }
